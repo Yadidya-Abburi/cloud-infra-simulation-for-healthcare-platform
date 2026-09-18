@@ -2,6 +2,7 @@
 
 # Secrets & Environment variables
 .env
+.env.example
 *.env.local
 *.pem
 *.key
