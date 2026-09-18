@@ -1,0 +1,50 @@
+name: DevSecOps CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-and-gate:
+    name: Quality, Security & Policy Gates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Linting & Testing Tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest
+
+      - name: Stage 1: Syntax & Code Linting
+        run: |
+          python -m py_compile services/api/app/main.py services/worker/app/main.py services/mock-ehr/app/main.py services/ai-service/app/main.py
+
+      - name: Stage 2: Unit & Contract Tests
+        run: |
+          python -m unittest ci/tests/test_security_rules.py ci/tests/test_infrastructure_config.py
+
+      - name: Stage 3: Automated Secret Detection Gate
+        run: |
+          python ci/security/secret_scanner.py .
+
+      - name: Stage 4: Dockerfile & Container Hardening Security Linter
+        run: |
+          python ci/security/dockerfile_linter.py .
+
+      - name: Stage 5: Dependency & Network Isolation Audit
+        run: |
+          python ci/security/dependency_auditor.py .
+
+      - name: Stage 6: Pipeline Execution Verification
+        run: |
+          python ci/run-pipeline.py

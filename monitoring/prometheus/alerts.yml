@@ -1,0 +1,52 @@
+groups:
+  - name: healthcare_platform_alerts
+    rules:
+      # Alert 1: API Service Unavailable
+      - alert: APIServiceDown
+        expr: up{job="api-service"} == 0
+        for: 10s
+        labels:
+          severity: critical
+        annotations:
+          summary: "API service instance is down"
+          description: "Prometheus failed to scrape API service endpoint for more than 10 seconds."
+
+      # Alert 2: High HTTP 5xx Error Rate
+      - alert: HighHTTP5xxErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[1m]) > 0.1
+        for: 15s
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP 5xx rate detected on API"
+          description: "API is returning 5xx server errors at a rate exceeding 0.1 req/s."
+
+      # Alert 3: Worker Down / Unavailable
+      - alert: WorkerUnavailable
+        expr: count(up{job="worker-service"} == 1) == 0
+        for: 10s
+        labels:
+          severity: critical
+        annotations:
+          summary: "All background workers are unavailable"
+          description: "No active worker instances are reporting metrics. Queue processing is halted."
+
+      # Alert 4: Queue Backlog Growing
+      - alert: QueueBacklogSpike
+        expr: max(worker_queue_depth) > 10
+        for: 15s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis job queue backlog is accumulating"
+          description: "Queue depth has exceeded 10 jobs for more than 15 seconds. Worker scaling may be required."
+
+      # Alert 5: Mock EHR Dependency Failure Rate High
+      - alert: EHRFailureRateHigh
+        expr: rate(ehr_requests_total{status=~"5.."}[1m]) > 0
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: "External EHR sync failures detected"
+          description: "Mock EHR service is responding with 5xx/504 errors to sync requests."

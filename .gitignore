@@ -1,0 +1,33 @@
+# Git ignore rules for Healthcare Infrastructure Simulation
+
+# Secrets & Environment variables
+.env
+*.env.local
+*.pem
+*.key
+id_rsa*
+
+# Terraform local state and provider cache
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+!example.tfvars
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs and persistent data
+logs/
+*.log
+scratch/
+
+# OS specific files
+.DS_Store
+Thumbs.db

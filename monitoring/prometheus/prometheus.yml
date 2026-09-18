@@ -1,0 +1,48 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+rule_files:
+  - "alerts.yml"
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Healthcare API Service
+  - job_name: "api-service"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["api-blue:8000"]
+    relabel_configs:
+      - target_label: service
+        replacement: api
+
+  # Asynchronous Background Worker(s)
+  - job_name: "worker-service"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["worker-1:9100", "worker-2:9100"]
+    relabel_configs:
+      - target_label: service
+        replacement: worker
+
+  # AI Diagnostics Service
+  - job_name: "ai-service"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["ai-service:8082"]
+    relabel_configs:
+      - target_label: service
+        replacement: ai-service
+
+  # Mock External EHR Dependency
+  - job_name: "mock-ehr"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["mock-ehr:8083"]
+    relabel_configs:
+      - target_label: service
+        replacement: mock-ehr
