@@ -9,6 +9,8 @@ networks:
 volumes:
   postgres_data:
     driver: local
+  prometheus_data:
+  grafana_data:
 
 services:
   # Ingress / Reverse Proxy (Only publicly exposed port 80/8080)
@@ -154,3 +156,48 @@ services:
         condition: service_healthy
       mock-ehr:
         condition: service_healthy
+
+  # Prometheus Monitoring Service
+  prometheus:
+    image: prom/prometheus:v2.53.1
+    container_name: healthcare-prometheus
+    restart: always
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - backend-net
+    ports:
+      - "9091:9090" 
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Grafana Dashboard Service
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: healthcare-grafana
+    restart: always
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - backend-net
+    ports:
+      - "3001:3000"
+    depends_on:
+      prometheus:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3

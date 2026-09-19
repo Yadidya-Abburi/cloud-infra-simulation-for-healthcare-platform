@@ -110,6 +110,9 @@ def run_single_transaction(base_url: str, patient_id: str, job_type: str):
         print(f"  - Latency       : {result_payload.get('latency_seconds', 'N/A')}s")
         print(f"  - Retry Count   : {final_result.get('retry_count', 0)}")
         print(f"  - EHR Sync Data : {result_payload.get('ehr_sync', {})}")
+        print(f"\n{BOLD}{CYAN}[INFO] To manually clear all jobs, run:{RESET}")
+        print("  docker exec healthcare-redis redis-cli FLUSHALL")
+        print('  docker exec healthcare-postgres psql -U postgres -d healthcare -c "TRUNCATE jobs;"')
         return True
     return False
 
@@ -163,6 +166,9 @@ def run_batch_burst(base_url: str, count: int, job_type: str):
 
     drain_elapsed = time.time() - start_poll
     print(f"\n{GREEN}{BOLD}[OK] Batch burst drained: {completed}/{count} jobs completed in {drain_elapsed:.2f}s!{RESET}\n")
+    print(f"{BOLD}{CYAN}[INFO] To manually clear all jobs, run:{RESET}")
+    print("  docker exec healthcare-redis redis-cli FLUSHALL")
+    print('  docker exec healthcare-postgres psql -U postgres -d healthcare -c "TRUNCATE jobs;"\n')
     return completed == count
 
 
